@@ -254,12 +254,24 @@ if uploaded_file:
         st.markdown("### Preview of Cleaned Data")
         st.dataframe(df_final.head(15), use_container_width=True)
 
-        csv_data = df_final.to_csv(index=False).encode('utf-8')
+        import io
+
+        # 1. Create a buffer to hold the excel data
+        buffer = io.BytesIO()
+
+        # 2. Write the dataframe to the buffer using the 'xlsxwriter' or 'openpyxl' engine
+        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+            df_final.to_excel(writer, index=False, sheet_name='Birth Records')
+
+        # 3. Seek to the beginning of the buffer so Streamlit can read it
+        download_data = buffer.getvalue()
+
+        # 4. Update the download button
         st.download_button(
             label="DOWNLOAD FINAL ORGANIZED FILE",
-            data=csv_data,
-            file_name="OFFICIAL_CHO_BIRTH_RECORDS.csv",
-            mime="text/csv"
+            data=download_data,
+            file_name="OFFICIAL_CHO_BIRTH_RECORDS.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
     except Exception as e:
-        st.error(f"Error: {e}")
+            st.error(f"Error: {e}")
